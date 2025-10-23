@@ -29,6 +29,14 @@
     
     <!-- 自定义工具类 -->
     <style type="text/tailwindcss">
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        .animate-shake {
+            animation: shake 0.5s ease-in-out;
+        }
         @layer utilities {
             .content-auto {
                 content-visibility: auto;
@@ -111,16 +119,103 @@
                     </div>
                 </div>
                 
+                <!-- 修改点：移除“记住我”，替换为注册入口 -->
                 <div class="flex items-center justify-between">
-                    <label class="flex items-center">
-                        <input type="checkbox" class="rounded text-primary focus:ring-primary/50">
-                        <span class="ml-2 text-sm">记住我</span>
-                    </label>
+                    <a href="#" id="goToRegister" class="text-sm text-primary hover:underline">
+                        <i class="fa fa-user-plus mr-1"></i>前往注册
+                    </a>
                     <a href="#" class="text-sm text-primary hover:underline">忘记密码?</a>
                 </div>
                 
                 <button type="submit" class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 px-4 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]">
                     登录
+                </button>
+            </form>
+        </div>
+
+        <!-- 新增：注册面板（默认隐藏，与登录面板风格一致） -->
+        <div id="registerPanel" class="hidden w-full max-w-md bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 transition-all duration-500 transform">
+            <div class="text-center mb-8">
+                <h1 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-primary mb-2">创建账号</h1>
+                <p class="text-slate-500 dark:text-slate-400">注册后即可使用完整搜索功能</p>
+            </div>
+            
+            <form id="registerForm" class="space-y-6">
+                <!-- 用户名 -->
+                <div>
+                    <label for="regUsername" class="block text-sm font-medium mb-2">用户名</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i class="fa fa-user"></i>
+                        </span>
+                        <input type="text" id="regUsername" class="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all" placeholder="请设置用户名" required>
+                    </div>
+                </div>
+                
+                <!-- 密码 -->
+                <div>
+                    <label for="regPassword" class="block text-sm font-medium mb-2">密码</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i class="fa fa-lock"></i>
+                        </span>
+                        <input type="password" id="regPassword" class="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all" placeholder="请设置密码（至少6位）" required>
+                    </div>
+                </div>
+                
+                <!-- 二次确认密码 -->
+                <div>
+                    <label for="regConfirmPassword" class="block text-sm font-medium mb-2">确认密码</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i class="fa fa-lock"></i>
+                        </span>
+                        <input type="password" id="regConfirmPassword" class="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all" placeholder="请再次输入密码" required>
+                    </div>
+                    <!-- 新增：密码不一致提醒（默认隐藏） -->
+                    <p id="passwordMismatch" class="mt-1 text-sm text-red-500 hidden">
+                        <i class="fa fa-exclamation-circle"></i> 两次输入的密码不一致
+                    </p>
+                </div>
+                
+                <!-- 邮箱 -->
+                <div>
+                    <label for="regEmail" class="block text-sm font-medium mb-2">邮箱</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i class="fa fa-envelope"></i>
+                        </span>
+                        <input type="email" id="regEmail" class="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all" placeholder="请输入您的邮箱" required>
+                    </div>
+                </div>
+                
+                <!-- 验证码 -->
+                <div>
+                    <label for="regVerifyCode" class="block text-sm font-medium mb-2">验证码</label>
+                    <div class="relative flex items-center space-x-3">
+                        <div class="relative flex-1">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                <i class="fa fa-shield"></i>
+                            </span>
+                            <input type="text" id="regVerifyCode" class="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all" placeholder="请输入验证码" required>
+                        </div>
+                        <!-- 发送验证码按钮 -->
+                        <button type="button" id="sendVerifyCode" class="whitespace-nowrap px-4 py-3 bg-secondary hover:bg-secondary/90 text-white font-medium rounded-lg transition-all">
+                            获取验证码
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 切换回登录 -->
+                <div class="flex items-center justify-start">
+                    <a href="#" id="goToLogin" class="text-sm text-primary hover:underline">
+                        <i class="fa fa-sign-in mr-1"></i>已有账号？前往登录
+                    </a>
+                </div>
+                
+                <!-- 注册按钮 -->
+                <button type="submit" class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 px-4 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]">
+                    注册账号
                 </button>
             </form>
         </div>
@@ -178,10 +273,13 @@
     <script>
         // DOM元素
         const loginPanel = document.getElementById('loginPanel');
+        const registerPanel = document.getElementById('registerPanel'); // 新增：注册面板元素
         const searchPanel = document.getElementById('searchPanel');
         const loginForm = document.getElementById('loginForm');
         const dropdownButton = document.getElementById('dropdownButton');
         const dropdownMenu = document.getElementById('dropdownMenu');
+        const goToRegister = document.getElementById('goToRegister'); // 新增：登录页前往注册按钮
+        const goToLogin = document.getElementById('goToLogin'); // 新增：注册页前往登录按钮
         
         // 记录鼠标位置
         let mouseX = window.innerWidth / 2;
@@ -199,6 +297,28 @@
                 loginPanel.classList.add('hidden');
                 searchPanel.classList.remove('hidden');
             }, 500);
+        });
+        
+        // 新增：登录页切换到注册页
+        goToRegister.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginPanel.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => {
+                loginPanel.classList.add('hidden');
+                registerPanel.classList.remove('hidden');
+                registerPanel.classList.remove('opacity-0', 'scale-95');
+            }, 300);
+        });
+        
+        // 新增：注册页切换到登录页
+        goToLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            registerPanel.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => {
+                registerPanel.classList.add('hidden');
+                loginPanel.classList.remove('hidden');
+                loginPanel.classList.remove('opacity-0', 'scale-95');
+            }, 300);
         });
         
         // 下拉菜单切换
@@ -287,7 +407,42 @@
                     document.querySelector("h4").innerText=text;
                 })
         }
+        // 新增：密码一致性检测
+        const regPassword = document.getElementById('regPassword');
+        const regConfirmPassword = document.getElementById('regConfirmPassword');
+        const passwordMismatch = document.getElementById('passwordMismatch');
+
+        // 实时检测密码一致性
+        function checkPasswordMatch() {
+            if (regPassword.value !== regConfirmPassword.value) {
+                passwordMismatch.classList.remove('hidden');
+                // 添加错误状态样式
+                regConfirmPassword.classList.add('border-red-500');
+                regConfirmPassword.classList.remove('border-slate-300', 'dark:border-slate-700');
+            } else {
+                passwordMismatch.classList.add('hidden');
+                // 恢复正常状态样式
+                regConfirmPassword.classList.remove('border-red-500');
+                regConfirmPassword.classList.add('border-slate-300', 'dark:border-slate-700');
+            }
+        }
+
+        // 监听密码输入变化
+        regPassword.addEventListener('input', checkPasswordMatch);
+        regConfirmPassword.addEventListener('input', checkPasswordMatch);
+
+        // 注册表单提交时再次验证
+        document.getElementById('registerForm').addEventListener('submit', (e) => {
+            if (regPassword.value !== regConfirmPassword.value) {
+                e.preventDefault();
+                checkPasswordMatch(); // 确保错误提示显示
+                // 给确认密码框添加抖动动画强调错误
+                regConfirmPassword.classList.add('animate-shake');
+                setTimeout(() => {
+                    regConfirmPassword.classList.remove('animate-shake');
+                }, 500);
+            }
+        });
     </script>
 </body>
 </html>
-    
