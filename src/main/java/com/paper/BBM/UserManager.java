@@ -24,9 +24,9 @@ public class UserManager {
     private MySQLHelper mysqlhelper;// 数据库操作对象
     
     // 存储验证码和邮箱的映射关系，key为邮箱，value为验证码
-    private Map<String, String> verificationCodeMap = new HashMap<>();
+    private static Map<String, String> verificationCodeMap = new HashMap<>();
     // 存储验证码创立时间，若超过五分钟则需判断代码失效
-    private Map<String, Long> codeExpireTimeMap = new HashMap<>();
+    private static Map<String, Long> codeExpireTimeMap = new HashMap<>();
     
     public UserManager() throws ClassNotFoundException, SQLException{
         this.mysqlhelper = new MySQLHelper();
@@ -86,13 +86,14 @@ public class UserManager {
         // 邮件发送配置（以QQ邮箱为例）
         Properties props = new Properties();
         props.put("mail.smtp.host", "smtp.qq.com");
-        props.put("mail.smtp.port", "587");
+        props.put("mail.smtp.port", "465");
         props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.ssl.enable", "true"); // 启用 SSL（关键，替换原 starttls）
+        props.put("mail.debug", "true"); // 开启调试模式，控制台会输出邮件发送细节
         
         // 邮箱账号信息（需替换为实际邮箱和授权码）
-        final String fromEmail = "your_email@qq.com";
-        final String password = "your_auth_code";
+        final String fromEmail = "2878580863@qq.com";
+        final String password = "iiujujwtvvatdcfd";
         
         // 创建会话
         Session session = Session.getInstance(props, new Authenticator() {
@@ -111,7 +112,7 @@ public class UserManager {
             
             // 发送邮件
             Transport.send(message);
-            return ""; // 发送成功
+            return "发送成功"; // 发送成功
         } catch (MessagingException e) {
             return "验证码发送失败：" + e.getMessage();
         }
@@ -153,6 +154,7 @@ public class UserManager {
         if (result.isEmpty()) {
             verificationCodeMap.remove(user.getEmail());
             codeExpireTimeMap.remove(user.getEmail());
+            return "注册成功";
         }
         
         return result;

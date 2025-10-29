@@ -48,6 +48,12 @@
     </style>
     
     <style>
+        #dropdownContainer #dropdownMenu:not(.hidden) {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            z-index: 9999 !important; /* 确保在最上层 */
+        }
         /* 基础样式 */
         body {
             overflow-x: hidden;
@@ -214,7 +220,7 @@
                 </div>
                 
                 <!-- 注册按钮 -->
-                <button type="submit" class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 px-4 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]">
+                <button type="submit" class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 px-4 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]" id="submit">
                     注册账号
                 </button>
             </form>
@@ -269,7 +275,19 @@
             </div>
         </div>
     </div>
-
+    <!-- 新增：通知弹窗 -->
+    <div id="notificationToast" class="fixed bottom-[-100px] left-1/2 transform -translate-x-1/2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm rounded-xl shadow-2xl px-6 py-4 flex items-center gap-3 transition-all duration-500 z-50">
+        <!-- 图标容器（根据消息类型切换图标） -->
+        <div id="toastIcon" class="w-8 h-8 rounded-full flex items-center justify-center bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+            <i class="fa fa-check"></i>
+        </div>
+        <!-- 消息内容 -->
+        <p id="toastMessage" class="text-slate-800 dark:text-slate-200">操作成功！</p>
+        <!-- 关闭按钮 -->
+        <button id="closeToast" class="ml-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+            <i class="fa fa-times"></i>
+        </button>
+    </div>
     <script>
         // DOM元素
         const loginPanel = document.getElementById('loginPanel');
@@ -284,20 +302,6 @@
         // 记录鼠标位置
         let mouseX = window.innerWidth / 2;
         let mouseY = window.innerHeight / 2;
-        
-        // 登录表单提交事件
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            // 登录动画效果
-            loginPanel.classList.add('opacity-0', 'scale-95');
-            
-            // 延迟显示搜索面板
-            setTimeout(() => {
-                loginPanel.classList.add('hidden');
-                searchPanel.classList.remove('hidden');
-            }, 500);
-        });
         
         // 新增：登录页切换到注册页
         goToRegister.addEventListener('click', (e) => {
@@ -321,15 +325,36 @@
             }, 300);
         });
         
-        // 下拉菜单切换
+        // 下拉菜单切换（替换原有的下拉菜单代码）
+        //const dropdownButton = document.getElementById('dropdownButton');
+        //const dropdownMenu = document.getElementById('dropdownMenu');
+        const dropdownContainer = document.getElementById('dropdownContainer');
+
+        // 点击按钮切换下拉菜单显示/隐藏
         dropdownButton.addEventListener('click', (e) => {
-            e.stopPropagation();
+            e.stopPropagation(); // 阻止事件冒泡到父元素
+             console.log('下拉按钮被点击了'); // 新增日志
             dropdownMenu.classList.toggle('hidden');
+            console.log('切换后菜单的hidden状态：', dropdownMenu.classList.contains('hidden')); // 新增日志
         });
-        
-        // 点击页面其他地方关闭下拉菜单
+
+        // 点击下拉菜单内部时，不关闭菜单（避免点击选项时菜单消失）
+        dropdownMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // 点击页面其他地方（非下拉菜单区域）时，关闭菜单
         document.addEventListener('click', () => {
-            dropdownMenu.classList.add('hidden');
+            if (!dropdownMenu.classList.contains('hidden')) {
+                dropdownMenu.classList.add('hidden');
+            }
+        });
+
+        // 按ESC键关闭下拉菜单（可选增强，提升体验）
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !dropdownMenu.classList.contains('hidden')) {
+                dropdownMenu.classList.add('hidden');
+            }
         });
         
         // 更新鼠标位置
@@ -407,6 +432,96 @@
                     document.querySelector("h4").innerText=text;
                 })
         }
+
+        document.querySelector('#sendVerifyCode').onclick=function(){
+            var email=document.querySelector("#regEmail").value;
+            fetch("http://localhost:8080/verifycode?email="+email)
+                .then(resp=>resp.text())
+                .then(text=>{
+                    // 核心修改：根据服务器返回的文本显示弹窗
+                    // 假设服务器返回 "注册成功" 或 "验证码错误" 等文本
+                    if (text.includes('成功')) { // 匹配成功关键词
+                        showToast(text); // 显示成功弹窗
+                    } else { // 失败情况
+                        showToast(text, 'error'); // 显示错误弹窗
+                    }
+                })
+        }
+
+        document.querySelector("#submit").onclick=function(e){
+            e.preventDefault();
+            var uname=document.querySelector("#regUsername").value;
+            var password=document.querySelector("#regPassword").value;
+            var email=document.querySelector("#regEmail").value;
+            var verifycode=document.querySelector("#regVerifyCode").value;
+            // 新增：简单验证（确保输入不为空，可选增强）
+            if (!uname || !password || !email || !verifycode) {
+                showToast('请填写所有必填字段', 'error');
+                return;
+            }
+
+            fetch("http://localhost:8080/submit?uname="+uname+"&password="+password+"&email="+email+"&verifycode="+verifycode)
+                .then(resp=>resp.text())
+                .then(text=>{
+                    // 核心修改：根据服务器返回的文本显示弹窗
+                    // 假设服务器返回 "注册成功" 或 "验证码错误" 等文本
+                    if (text.includes('成功')) { // 匹配成功关键词
+                        showToast(text); // 显示成功弹窗
+                        // 可选：注册成功后自动跳回登录页
+                        setTimeout(() => {
+                            goToLogin.click();
+                        }, 1500);
+                    } else { // 失败情况
+                        showToast(text, 'error');
+                        // 显示错误弹窗
+                    }
+                })
+                // 新增：捕获请求失败错误（如网络问题）
+                .catch(error => {
+                    showToast('网络错误，请稍后重试', 'error');
+                    console.error('请求失败：', error); // 控制台打印错误，便于调试
+                });
+        }
+
+        //登录功能
+        // 2. 修改登录逻辑：通过表单 submit 事件绑定（替换原有的 document.querySelector("#login").onclick）
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // 阻止表单默认提交（避免页面刷新）
+    
+            // 获取用户名和密码（和你原逻辑一致）
+            var uname = document.querySelector("#username").value;
+            var password = document.querySelector("#password").value;
+    
+            // 输入验证（保留原逻辑）
+            if (!uname || !password) {
+                showToast('请填写所有必填字段', 'error');
+                return;
+            }
+    
+            // 发送登录请求（核心修改：根据返回结果判断是否跳转）
+            fetch("http://localhost:8080/login?uname=" + uname + "&password=" + password)
+                .then(resp => resp.text())
+                .then(text => {
+                    if (text.includes('成功')) { // 后端返回“登录成功”
+                        showToast(text); // 显示成功弹窗
+                        // 延迟 1.5 秒后跳转到搜索页（和注册成功跳转逻辑一致）
+                        setTimeout(() => {
+                            loginPanel.classList.add('opacity-0', 'scale-95'); // 登录面板隐藏动画
+                            setTimeout(() => {
+                                loginPanel.classList.add('hidden');
+                                searchPanel.classList.remove('hidden'); // 显示搜索面板
+                            }, 500);
+                        }, 1500);
+                    } else { // 后端返回“用户名或密码错误”
+                        showToast(text, 'error'); // 仅显示弹窗，不跳转
+                    }
+                })
+                .catch(error => {
+                    showToast('网络错误，请稍后重试', 'error');
+                    console.error('登录请求失败：', error);
+                });
+        });
+
         // 新增：密码一致性检测
         const regPassword = document.getElementById('regPassword');
         const regConfirmPassword = document.getElementById('regConfirmPassword');
@@ -441,6 +556,56 @@
                 setTimeout(() => {
                     regConfirmPassword.classList.remove('animate-shake');
                 }, 500);
+            }
+        });
+        // 新增：弹窗控制逻辑
+        const notificationToast = document.getElementById('notificationToast');
+        const toastMessage = document.getElementById('toastMessage');
+        const toastIcon = document.getElementById('toastIcon');
+        const closeToast = document.getElementById('closeToast');
+
+        /**
+        * 显示通知弹窗
+        * @param {string} message - 要显示的消息内容
+        * @param {string} type - 消息类型（success/error，控制图标和颜色）
+        */
+        function showToast(message, type = 'success') {
+            // 1. 设置消息内容
+            toastMessage.textContent = message;
+    
+            // 2. 根据类型切换图标和颜色
+            if (type === 'error') {
+                toastIcon.className = 'w-8 h-8 rounded-full flex items-center justify-center bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400';
+                toastIcon.innerHTML = '<i class="fa fa-exclamation-circle"></i>';
+            } else {
+                toastIcon.className = 'w-8 h-8 rounded-full flex items-center justify-center bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400';
+                toastIcon.innerHTML = '<i class="fa fa-check"></i>';
+            }
+    
+            // 3. 显示弹窗（从下往上滑入）
+            notificationToast.style.bottom = '20px';
+    
+            // 4. 3秒后自动隐藏（如果用户未手动关闭）
+            clearTimeout(window.toastTimer); // 清除之前的定时器，避免多个弹窗叠加
+            window.toastTimer = setTimeout(() => {
+                hideToast();
+            }, 3000);
+        }
+
+        /**
+         * 隐藏通知弹窗
+         */
+        function hideToast() {
+            notificationToast.style.bottom = '-100px'; // 滑回底部隐藏
+        }
+
+        // 5. 绑定关闭按钮点击事件
+        closeToast.addEventListener('click', hideToast);
+
+        // 6. 点击弹窗外部区域也关闭（可选增强）
+        document.addEventListener('click', (e) => {
+            if (e.target === notificationToast) {
+                hideToast();
             }
         });
     </script>

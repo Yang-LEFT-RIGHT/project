@@ -16,21 +16,40 @@ public class MySQLHelper {
         connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/PAPER_sys","root","MySQLnewPassword2025");
     }
     
-    // 执行非查询的SQL语句，支持参数化查询
-    public String executeSQL(String sqlString, Object... params){
+    public String executeSQL(String sqlString, Object... params) {
         String errorString = "";
         PreparedStatement pstmt = null;
         try {
-            // 使用PreparedStatement替代Statement
+            // 1. 确保连接自动提交（关键：防止事务未提交）
+            if (connection.getAutoCommit() == false) {
+                connection.setAutoCommit(true);
+            }
+        
+            // 2. 使用PreparedStatement替代Statement
             pstmt = this.connection.prepareStatement(sqlString);
-            // 设置参数
+            // 3. 设置参数
             setParameters(pstmt, params);
-            // 执行sql语句
-            pstmt.execute();
+            // 4. 关键修改：用 executeUpdate() 执行 INSERT，获取受影响行数
+            int affectedRows = pstmt.executeUpdate();
+        
+            // 5. 验证是否成功插入（受影响行数 > 0 表示成功）
+            if (affectedRows == 0) {
+                errorString = "SQL执行成功，但未影响任何数据（可能参数不匹配）";
+            }
+        
         } catch (SQLException ex) {
-            errorString = ex.getMessage();
+            // 捕获SQL异常，返回具体错误信息（方便排查）
+            errorString = "SQL执行异常：" + ex.getMessage();
+            // 若有事务，发生异常时回滚（避免脏数据）
+            try {
+                if (connection != null && !connection.isClosed() && !connection.getAutoCommit()) {
+                    connection.rollback();
+                }
+            } catch (SQLException e) {
+                errorString += "；回滚事务失败：" + e.getMessage();
+            }
         } finally {
-            // 关闭资源
+            // 6. 关闭资源
             if (pstmt != null) {
                 try {
                     pstmt.close();
