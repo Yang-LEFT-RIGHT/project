@@ -7,7 +7,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Random; // 关键：导入 Jakarta Mail 的 Authenticator
 
-import com.paper.DBM.MySQLHelper; // 若未导入，也需添加（PasswordAuthentication 属于 jakarta.mail）
+import org.mindrot.jbcrypt.BCrypt; // 若未导入，也需添加（PasswordAuthentication 属于 jakarta.mail）
+
+import com.paper.DBM.MySQLHelper;
 import com.paper.Entity.User;
 
 import jakarta.mail.Authenticator;
@@ -38,8 +40,8 @@ public class UserManager {
     public boolean login(User user) throws SQLException{
         boolean f = false;
         // 使用参数化查询，修复原SQL语句的语法错误和注入风险
-        String sqlString = "SELECT * FROM USER WHERE uname = ? AND password = ?";
-        Map<String,Object> map = mysqlhelper.executeSQLWithSelect(sqlString, user.getUname(), user.getPassword());
+        String sqlString = "SELECT PASSWORD FROM USER WHERE uname = ?";
+        Map<String,Object> map = mysqlhelper.executeSQLWithSelect(sqlString, user.getUname());
         
         ResultSet set = null;
         try {
@@ -47,7 +49,10 @@ public class UserManager {
                 set = (ResultSet) map.get("result");
                 // 检查是否有结果
                 if(set.next()){
-                    f = true;
+                    String storedHashedPassword = set.getString("password");
+                    if (BCrypt.checkpw(user.getPassword(), storedHashedPassword)) {
+                        f = true;
+                    }
                 }
             }
         } finally {
@@ -150,7 +155,8 @@ public class UserManager {
         
         // 执行注册SQL，使用参数化查询
         String sql = "INSERT INTO USER (uname, password, email) VALUES (?, ?, ?)";
-        String result = mysqlhelper.executeSQL(sql, user.getUname(), user.getPassword(), user.getEmail());
+        String hashedPassword = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt());
+        String result = mysqlhelper.executeSQL(sql, user.getUname(), hashedPassword, user.getEmail());
         
         // 注册成功后清除验证码
         if (result.isEmpty()) {

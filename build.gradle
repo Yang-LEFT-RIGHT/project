@@ -29,6 +29,9 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	// Jakarta Servlet API（编译时依赖，由容器提供）
     providedCompile 'jakarta.servlet:jakarta.servlet-api:5.0.0'
+	
+	// 加入密码加密功能依赖
+	implementation 'org.mindrot:jbcrypt:0.4'
 
     // 其他示例依赖（如 JPA）
     implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
