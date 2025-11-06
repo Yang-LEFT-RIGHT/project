@@ -22,6 +22,8 @@ import jakarta.mail.internet.MimeMessage;
 /*负责实现关于用户表功能的业务逻辑类*/
 public class UserManager {
     private MySQLHelper mysqlhelper;// 数据库操作对象
+
+    private static final String QQ_MAIL_PASSWORD=System.getenv("QQ_MAIL_PASSWORD");
     
     // 存储验证码和邮箱的映射关系，key为邮箱，value为验证码
     private static Map<String, String> verificationCodeMap = new HashMap<>();
@@ -93,7 +95,7 @@ public class UserManager {
         
         // 邮箱账号信息（需替换为实际邮箱和授权码）
         final String fromEmail = "2878580863@qq.com";
-        final String password = "iiujujwtvvatdcfd";
+        final String password = QQ_MAIL_PASSWORD;
         
         // 创建会话
         Session session = Session.getInstance(props, new Authenticator() {

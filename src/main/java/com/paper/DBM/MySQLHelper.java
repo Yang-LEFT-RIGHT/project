@@ -11,9 +11,13 @@ import java.util.Map;
 public class MySQLHelper {
     private Connection connection;
     
+    private static final String DB_PASSWORD = System.getenv("JAVA_DB_PASSWORD");
+    
+
     public MySQLHelper() throws ClassNotFoundException, SQLException{
+        System.out.println("密码是"+DB_PASSWORD);
         Class.forName("com.mysql.cj.jdbc.Driver");
-        connection = DriverManager.getConnection("jdbc:mysql://rm-2zeqtyu0u869yqlh59o.mysql.rds.aliyuncs.com:3306/PAPER_sys","root","MySQLnewPassword2025");
+        connection = DriverManager.getConnection("jdbc:mysql://rm-2zeqtyu0u869yqlh59o.mysql.rds.aliyuncs.com:3306/PAPER_sys","root",DB_PASSWORD);
     }
     
     public String executeSQL(String sqlString, Object... params) {
